@@ -601,8 +601,12 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
   /* Compress for each shuffled slice split for this block. */
   /* If typesize is too large, neblock is too small or we are in a
      leftover block, do not split at all. */
-  if ((typesize <= MAX_SPLITS) && (blocksize / typesize) >= MIN_BUFFERSIZE &&
-      (!leftoverblock)) {
+  if (context->compcode == BLOSC_ZSTD) {
+    nsplits = 1;
+  }
+  else if ((typesize <= MAX_SPLITS) &&
+	   (blocksize / typesize) >= MIN_BUFFERSIZE &&
+	   (!leftoverblock)) {
     nsplits = typesize;
   }
   else {
@@ -714,9 +718,13 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
 
   compformat = (*(context->header_flags) & 0xe0) >> 5;
 
-  /* Compress for each shuffled slice split for this block. */
-  if ((typesize <= MAX_SPLITS) && (blocksize / typesize) >= MIN_BUFFERSIZE &&
-      (!leftoverblock)) {
+  /* Decompress for each shuffled slice split for this block */
+  if (compformat == BLOSC_ZSTD_FORMAT) {
+    nsplits = 1;
+  }
+  else if ((typesize <= MAX_SPLITS) &&
+	   (blocksize / typesize) >= MIN_BUFFERSIZE &&
+	   (!leftoverblock)) {
     nsplits = typesize;
   }
   else {
@@ -741,25 +749,25 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
         nbytes = lz4_wrap_decompress((char*)src, (size_t)cbytes,
                                      (char*)_dest, (size_t)neblock);
       }
-  #endif /*  HAVE_LZ4 */
+  #endif /* HAVE_LZ4 */
   #if defined(HAVE_SNAPPY)
       else if (compformat == BLOSC_SNAPPY_FORMAT) {
         nbytes = snappy_wrap_decompress((char*)src, (size_t)cbytes,
                                         (char*)_dest, (size_t)neblock);
       }
-  #endif /*  HAVE_SNAPPY */
+  #endif /* HAVE_SNAPPY */
   #if defined(HAVE_ZLIB)
       else if (compformat == BLOSC_ZLIB_FORMAT) {
         nbytes = zlib_wrap_decompress((char*)src, (size_t)cbytes,
                                       (char*)_dest, (size_t)neblock);
       }
-  #endif /*  HAVE_ZLIB */
+  #endif /* HAVE_ZLIB */
   #if defined(HAVE_ZSTD)
       else if (compformat == BLOSC_ZSTD_FORMAT) {
         nbytes = zstd_wrap_decompress((char*)src, (size_t)cbytes,
                                       (char*)_dest, (size_t)neblock);
       }
-  #endif /*  HAVE_ZSTD */
+  #endif /* HAVE_ZSTD */
       else {
         compname = clibcode_to_clibname(compformat);
         fprintf(stderr,
@@ -958,9 +966,9 @@ static int32_t compute_blocksize(struct blosc_context* context,
     /* For Zstd, increase the block sizes by a factor of 8 because it
        is meant for compressing large blocks (it shows a big overhead
        when compressing small ones). */
-    if (context->compcode == BLOSC_ZSTD) {
-      blocksize *= 8;
-    }
+    /* if (context->compcode == BLOSC_ZSTD) { */
+    /*   blocksize *= 8; */
+    /* } */
 
     /* Choose a different blocksize depending on the compression level */
     switch (clevel) {
