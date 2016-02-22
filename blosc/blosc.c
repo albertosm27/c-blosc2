@@ -601,17 +601,18 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
   /* Compress for each shuffled slice split for this block. */
   /* If typesize is too large, neblock is too small or we are in a
      leftover block, do not split at all. */
-  if (context->compcode == BLOSC_ZSTD) {
-    nsplits = 1;
-  }
-  else if ((typesize <= MAX_SPLITS) &&
-	   (blocksize / typesize) >= MIN_BUFFERSIZE &&
-	   (!leftoverblock)) {
-    nsplits = typesize;
-  }
-  else {
-    nsplits = 1;
-  }
+  nsplits = 1;
+  /* if (context->compcode == BLOSC_ZSTD) { */
+  /*   nsplits = 1; */
+  /* } */
+  /* else if ((typesize <= MAX_SPLITS) && */
+  /* 	   (blocksize / typesize) >= MIN_BUFFERSIZE && */
+  /* 	   (!leftoverblock)) { */
+  /*   nsplits = typesize; */
+  /* } */
+  /* else { */
+  /*   nsplits = 1; */
+  /* } */
   neblock = blocksize / nsplits;
   for (j = 0; j < nsplits; j++) {
     dest += sizeof(int32_t);
@@ -719,17 +720,18 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
   compformat = (*(context->header_flags) & 0xe0) >> 5;
 
   /* Decompress for each shuffled slice split for this block */
-  if (compformat == BLOSC_ZSTD_FORMAT) {
-    nsplits = 1;
-  }
-  else if ((typesize <= MAX_SPLITS) &&
-	   (blocksize / typesize) >= MIN_BUFFERSIZE &&
-	   (!leftoverblock)) {
-    nsplits = typesize;
-  }
-  else {
-    nsplits = 1;
-  }
+  nsplits = 1;
+  /* if (compformat == BLOSC_ZSTD_FORMAT) { */
+  /*   nsplits = 1; */
+  /* } */
+  /* else if ((typesize <= MAX_SPLITS) && */
+  /* 	   (blocksize / typesize) >= MIN_BUFFERSIZE && */
+  /* 	   (!leftoverblock)) { */
+  /*   nsplits = typesize; */
+  /* } */
+  /* else { */
+  /*   nsplits = 1; */
+  /* } */
   neblock = blocksize / nsplits;
   for (j = 0; j < nsplits; j++) {
     cbytes = sw32_(src);      /* amount of compressed bytes */
@@ -953,22 +955,22 @@ static int32_t compute_blocksize(struct blosc_context* context,
        is meant for compressing large blocks (it shows a big overhead
        when compressing small ones). */
     if (context->compcode == BLOSC_LZ4HC) {
-      blocksize *= 8;
+      blocksize *= 4;
     }
 
     /* For Zlib, increase the block sizes by a factor of 8 because it
        is meant for compressing large blocks (it shows a big overhead
        when compressing small ones). */
     if (context->compcode == BLOSC_ZLIB) {
-      blocksize *= 8;
+      blocksize *= 4;
     }
 
     /* For Zstd, increase the block sizes by a factor of 8 because it
        is meant for compressing large blocks (it shows a big overhead
        when compressing small ones). */
-    /* if (context->compcode == BLOSC_ZSTD) { */
-    /*   blocksize *= 8; */
-    /* } */
+    if (context->compcode == BLOSC_ZSTD) {
+      blocksize *= 2;
+    }
 
     /* Choose a different blocksize depending on the compression level */
     switch (clevel) {
