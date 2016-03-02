@@ -11,6 +11,8 @@
 #       build the benchmark program
 #   DEACTIVATE_LZ4: default OFF
 #       do not include support for the LZ4 library
+#   DEACTIVATE_LZ5: default OFF
+#       do not include support for the LZ5 library
 #   DEACTIVATE_SNAPPY: default OFF
 #       do not include support for the Snappy library
 #   DEACTIVATE_ZLIB: default OFF
@@ -19,6 +21,9 @@
 #       do not include support for the Zstd library
 #   PREFER_EXTERNAL_LZ4: default OFF
 #       when found, use the installed LZ4 libs instead of included
+#       sources
+#   PREFER_EXTERNAL_LZ5: default OFF
+#       when found, use the installed LZ5 libs instead of included
 #       sources
 #   PREFER_EXTERNAL_SNAPPY: default ON
 #       when found, use the installed Snappy libs instead of included
@@ -88,6 +93,8 @@ option(BUILD_BENCHMARKS
         "Build benchmark programs form the blosc compression library" ON)
 option(DEACTIVATE_LZ4
         "Do not include support for the LZ4 library." OFF)
+option(DEACTIVATE_LZ5
+        "Do not include support for the LZ5 library." OFF)
 option(DEACTIVATE_SNAPPY
         "Do not include support for the SNAPPY library." OFF)
 option(DEACTIVATE_ZLIB
@@ -96,6 +103,8 @@ option(DEACTIVATE_ZSTD
         "Do not include support for the ZSTD library." OFF)
 option(PREFER_EXTERNAL_LZ4
         "Find and use external LZ4 library instead of included sources." OFF)
+option(PREFER_EXTERNAL_LZ5
+        "Find and use external LZ5 library instead of included sources." OFF)
 option(PREFER_EXTERNAL_SNAPPY
         "Find and use external SNAPPY library instead of included sources." ON)
 option(PREFER_EXTERNAL_ZLIB
@@ -116,6 +125,17 @@ if (NOT DEACTIVATE_LZ4)
     # not found, we will use the included sources for it
     set(HAVE_LZ4 TRUE)
 endif (NOT DEACTIVATE_LZ4)
+
+if (NOT DEACTIVATE_LZ5)
+    if (PREFER_EXTERNAL_LZ5)
+        find_package(LZ5)
+    else ()
+        message(STATUS "Using LZ5 internal sources.")
+    endif (PREFER_EXTERNAL_LZ5)
+    # HAVE_LZ5 will be set to true because even if the library is
+    # not found, we will use the included sources for it
+    set(HAVE_LZ5 TRUE)
+endif (NOT DEACTIVATE_LZ5)
 
 if (NOT DEACTIVATE_SNAPPY)
     if (PREFER_EXTERNAL_SNAPPY)

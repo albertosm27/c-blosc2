@@ -37,6 +37,10 @@
   #include "zstd.h"
   #include "error_public.h"
 #endif /*  HAVE_ZSTD */
+#if defined(HAVE_LZ5)
+  #include "lz5.h"
+  #include "lz5hc.h"
+#endif /*  HAVE_LZ5 */
 
 #if defined(_WIN32) && !defined(__MINGW32__)
   #include <windows.h>
@@ -334,6 +338,10 @@ static int compname_to_clibcode(const char* compname) {
     return BLOSC_ZLIB_LIB;
   if (strcmp(compname, BLOSC_ZSTD_COMPNAME) == 0)
     return BLOSC_ZSTD_LIB;
+  if (strcmp(compname, BLOSC_LZ5_COMPNAME) == 0)
+    return BLOSC_LZ5_LIB;
+  if (strcmp(compname, BLOSC_LZ5HC_COMPNAME) == 0)
+    return BLOSC_LZ5_LIB;
   return -1;
 }
 
@@ -344,6 +352,7 @@ static char* clibcode_to_clibname(int clibcode) {
   if (clibcode == BLOSC_SNAPPY_LIB) return BLOSC_SNAPPY_LIBNAME;
   if (clibcode == BLOSC_ZLIB_LIB) return BLOSC_ZLIB_LIBNAME;
   if (clibcode == BLOSC_ZSTD_LIB) return BLOSC_ZSTD_LIBNAME;
+  if (clibcode == BLOSC_LZ5_LIB) return BLOSC_LZ5_LIBNAME;
   return NULL;                  /* should never happen */
 }
 
@@ -370,6 +379,10 @@ int blosc_compcode_to_compname(int compcode, char** compname) {
     name = BLOSC_ZLIB_COMPNAME;
   else if (compcode == BLOSC_ZSTD)
     name = BLOSC_ZSTD_COMPNAME;
+  else if (compcode == BLOSC_LZ5)
+    name = BLOSC_LZ5_COMPNAME;
+  else if (compcode == BLOSC_LZ5HC)
+    name = BLOSC_LZ5HC_COMPNAME;
 
   *compname = name;
 
@@ -394,6 +407,12 @@ int blosc_compcode_to_compname(int compcode, char** compname) {
   else if (compcode == BLOSC_ZSTD)
     code = BLOSC_ZSTD;
 #endif /* HAVE_ZSTD */
+#if defined(HAVE_LZ5)
+  else if (compcode == BLOSC_LZ5)
+    code = BLOSC_LZ5;
+  else if (compcode == BLOSC_LZ5HC)
+    code = BLOSC_LZ5HC;
+#endif /* HAVE_LZ5 */
 
   return code;
 }
@@ -428,6 +447,14 @@ int blosc_compname_to_compcode(const char* compname) {
     code = BLOSC_ZSTD;
   }
 #endif /*  HAVE_ZSTD */
+#if defined(HAVE_LZ5)
+  else if (strcmp(compname, BLOSC_LZ5_COMPNAME) == 0) {
+    code = BLOSC_LZ5;
+  }
+  else if (strcmp(compname, BLOSC_LZ5HC_COMPNAME) == 0) {
+    code = BLOSC_LZ5HC;
+  }
+#endif /*  HAVE_LZ5 */
 
   return code;
 }
@@ -544,6 +571,39 @@ static int zstd_wrap_decompress(const struct thread_context* thread_context,
 }
 #endif /*  HAVE_ZSTD */
 
+#if defined(HAVE_LZ5)
+static int lz5_wrap_compress(const char* input, size_t input_length,
+                             char* output, size_t maxout, int accel) {
+  int cbytes;
+  cbytes = LZ5_compress_fast(input, output, (int)input_length, (int)maxout,
+                             accel);
+  return cbytes;
+}
+
+static int lz5hc_wrap_compress(const char* input, size_t input_length,
+                               char* output, size_t maxout, int clevel) {
+  int cbytes;
+  if (input_length > (size_t)(2 << 30))
+    return -1;   /* input larger than 1 GB is not supported */
+  /* clevel for lz5hc goes up to 16, at least in LZ5 1.4.1 */
+  cbytes = LZ5_compress_HC(input, output, (int)input_length, (int)maxout,
+			   clevel * 2 - 1);
+  return cbytes;
+}
+
+static int lz5_wrap_decompress(const char* input, size_t compressed_length,
+                               char* output, size_t maxout) {
+  size_t cbytes;
+  cbytes = LZ5_decompress_fast(input, output, (int)maxout);
+  if (cbytes != compressed_length) {
+    return 0;
+  }
+  return (int)maxout;
+}
+
+#endif /* HAVE_LZ5 */
+
+
 /* Compute acceleration for blosclz */
 static int get_accel(const struct blosc_context* context) {
   int32_t clevel = context->clevel;
@@ -558,7 +618,8 @@ static int get_accel(const struct blosc_context* context) {
       return 32;
     }
   }
-  else if (context->compcode == BLOSC_LZ4) {
+  else if ((context->compcode == BLOSC_LZ4) ||
+	   (context->compcode == BLOSC_LZ5)) {
     /* This acceleration setting based on discussions held in:
      * https://groups.google.com/forum/#!topic/lz4c/zosy90P8MQw
      */
@@ -671,6 +732,16 @@ static int blosc_c(const struct thread_context* thread_context, int32_t blocksiz
                                   (char*)dest, (size_t)maxout, context->clevel);
     }
   #endif /* HAVE_ZSTD */
+  #if defined(HAVE_LZ5)
+    else if (context->compcode == BLOSC_LZ5) {
+      cbytes = lz5_wrap_compress((char*)_src + j * neblock, (size_t)neblock,
+                                 (char*)dest, (size_t)maxout, accel);
+    }
+    else if (context->compcode == BLOSC_LZ5HC) {
+      cbytes = lz5hc_wrap_compress((char*)_src + j * neblock, (size_t)neblock,
+                                   (char*)dest, (size_t)maxout, context->clevel);
+    }
+  #endif /* HAVE_LZ5 */
 
     else {
       blosc_compcode_to_compname(context->compcode, &compname);
@@ -775,6 +846,13 @@ static int blosc_d(struct thread_context* thread_context, int32_t blocksize, int
                                       (char*)_dest, (size_t)neblock);
       }
   #endif /*  HAVE_ZSTD */
+  #if defined(HAVE_LZ5)
+      else if (compformat == BLOSC_LZ5_FORMAT) {
+        nbytes = lz5_wrap_decompress((char*)src, (size_t)cbytes,
+                                     (char*)_dest, (size_t)neblock);
+      }
+  #endif /*  HAVE_LZ5 */
+
       else {
         compname = clibcode_to_clibname(compformat);
         fprintf(stderr,
@@ -973,6 +1051,7 @@ static int do_job(struct blosc_context* context) {
 
 /* Whether a codec is meant for High Compression Ratios */
 #define HCR(codec) ( ((codec) == BLOSC_LZ4HC) || \
+		     ((codec) == BLOSC_LZ4HC) ||  \
 		     ((codec) == BLOSC_ZLIB) ||  \
 		     ((codec) == BLOSC_ZSTD) ? 1 : 0 )
 
@@ -1158,6 +1237,7 @@ static int split_block(int compcode, int typesize, int blocksize) {
      faster if we don't split, which is quite surprising. */
   return (((compcode == BLOSC_BLOSCLZ) ||
 	   //(compcode == BLOSC_LZ4) ||
+	   //(compcode == BLOSC_LZ5) ||
 	   (compcode == BLOSC_SNAPPY)) &&
 	  (typesize <= MAX_SPLITS) &&
 	  (blocksize / typesize) >= MIN_BUFFERSIZE);
@@ -1209,6 +1289,17 @@ static int write_compression_header(struct blosc_context* context, int clevel, i
       context->dest[1] = BLOSC_ZSTD_VERSION_FORMAT;  /* zstd format version */
       break;
 #endif /*  HAVE_ZSTD */
+
+#if defined(HAVE_LZ5)
+    case BLOSC_LZ5:
+      compformat = BLOSC_LZ5_FORMAT;
+      context->dest[1] = BLOSC_LZ5_VERSION_FORMAT;  /* lz5 format version */
+      break;
+    case BLOSC_LZ5HC:
+      compformat = BLOSC_LZ5HC_FORMAT;
+      context->dest[1] = BLOSC_LZ5HC_VERSION_FORMAT; /* lz5hc is the same as lz5 */
+      break;
+#endif /*  HAVE_LZ5 */
 
     default: {
       char* compname;
@@ -1843,6 +1934,12 @@ char* blosc_list_compressors(void) {
   strcat(ret, ",");
   strcat(ret, BLOSC_ZSTD_COMPNAME);
 #endif /* HAVE_ZSTD */
+#if defined(HAVE_LZ5)
+  strcat(ret, ",");
+  strcat(ret, BLOSC_LZ5_COMPNAME);
+  strcat(ret, ",");
+  strcat(ret, BLOSC_LZ5HC_COMPNAME);
+#endif /* HAVE_LZ5 */
   compressors_list_done = 1;
   return ret;
 }
@@ -1858,7 +1955,7 @@ int blosc_get_complib_info(char* compname, char** complib, char** version) {
   char* clibname;
   char* clibversion = "unknown";
 
-  #if (defined(HAVE_LZ4) && defined(LZ4_VERSION_MAJOR)) || (defined(HAVE_SNAPPY) && defined(SNAPPY_VERSION))
+  #if (defined(HAVE_LZ4) && defined(LZ4_VERSION_MAJOR)) || (defined(HAVE_LZ4) && defined(LZ4_VERSION_MAJOR)) || (defined(HAVE_SNAPPY) && defined(SNAPPY_VERSION))
   char sbuffer[256];
   #endif
 
@@ -1898,6 +1995,15 @@ int blosc_get_complib_info(char* compname, char** complib, char** version) {
     clibversion = sbuffer;
   }
 #endif /* HAVE_ZSTD */
+#if defined(HAVE_LZ5)
+  else if (clibcode == BLOSC_LZ5_LIB) {
+#if defined(LZ5_VERSION_MAJOR)
+    sprintf(sbuffer, "%d.%d.%d",
+            LZ5_VERSION_MAJOR, LZ5_VERSION_MINOR, LZ5_VERSION_RELEASE);
+    clibversion = sbuffer;
+#endif /* LZ5_VERSION_MAJOR */
+  }
+#endif /* HAVE_LZ5 */
 
   *complib = strdup(clibname);
   *version = strdup(clibversion);
