@@ -873,6 +873,8 @@ BLOSC_EXPORT int blosc2_get_cparams(blosc2_schunk *schunk, blosc2_cparams **cpar
  * @brief Return the @p dparams struct associated to a super-chunk.
  *
  * @param schunk The super-chunk from where to extract the decompression parameters.
+ * @param dparams The pointer where the decompression params will be returned.
+ *
  * @warning A new struct is allocated, and the user should free it after use.
  *
  * @return 0 if succeeds. Else a negative code is returned.

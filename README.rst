@@ -2,23 +2,21 @@
  Blosc: A blocking, shuffling and lossless compression library
 ===============================================================
 
-:Author: Francesc Alted
-:Contact: francesc@blosc.org
-:URL: http://www.blosc.org
-:Gitter: |gitter|
-:Travis CI: |travis|
-:Appveyor: |appveyor|
+|gitter| |travis| |appveyor|
 
 .. |gitter| image:: https://badges.gitter.im/Blosc/c-blosc.svg
         :alt: Join the chat at https://gitter.im/Blosc/c-blosc
         :target: https://gitter.im/Blosc/c-blosc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-.. |travis| image:: https://travis-ci.org/Blosc/c-blosc2.svg?branch=master
+.. |travis| image:: https://img.shields.io/travis/Blosc/c-blosc2/master.svg?label=Travis%20CI
         :target: https://travis-ci.org/Blosc/c-blosc2
 
-.. |appveyor| image:: https://ci.appveyor.com/api/projects/status/3mlyjc1ak0lbkmte/branch/master?svg=true
+.. |appveyor| image:: https://img.shields.io/appveyor/ci/FrancescAlted/c-blosc2/master.svg?label=AppVeyor
         :target: https://ci.appveyor.com/project/FrancescAlted/c-blosc2/branch/master
 
+:Author: Francesc Alted
+:Contact: francesc@blosc.org
+:URL: http://www.blosc.org
 
 What is it?
 ===========
@@ -97,7 +95,7 @@ is the thing that should be taken as a model for that.
 Compiling the C-Blosc2 library with CMake
 =========================================
 
-Blosc can be built, tested and installed using 
+Blosc can be built, tested and installed using
 `CMake <http://www.cmake.org>`_.  The following procedure
 describes a typical CMake build.
 
