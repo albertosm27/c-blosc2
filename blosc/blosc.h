@@ -47,16 +47,16 @@ enum {
 
 enum {
   BLOSC_MIN_HEADER_LENGTH = 16,
-  // Minimum header length (Blosc1)
+  //!< Minimum header length (Blosc1)
   BLOSC_EXTENDED_HEADER_LENGTH = 32,
-  // Extended header length (Blosc2, see README_HEADER)
+  //!< Extended header length (Blosc2, see README_HEADER)
   BLOSC_MAX_OVERHEAD = BLOSC_EXTENDED_HEADER_LENGTH,
   /** The maximum overhead during compression in bytes.  This equals to
    *  BLOSC_EXTENDED_HEADER_LENGTH now, but can be higher in future
    *  implementations
    */
   BLOSC_MAX_BUFFERSIZE = (INT_MAX - BLOSC_MAX_OVERHEAD),
-  // Maximum source buffer size to be compressed
+  //!< Maximum source buffer size to be compressed
   BLOSC_MAX_TYPESIZE = 255,
   /** Maximum typesize before considering source buffer as a stream of bytes
    * Cannot be larger than 255
@@ -72,42 +72,42 @@ enum {
  * @see #blosc_compress
  */
 enum {
-  BLOSC_NOSHUFFLE = 0,   // no shuffle (for compatibility with Blosc1)
-  BLOSC_NOFILTER = 0,    // no filter
-  BLOSC_SHUFFLE = 1,     // byte-wise shuffle
-  BLOSC_BITSHUFFLE = 2,  // bit-wise shuffle
-  BLOSC_DELTA = 3,       // delta filter
-  BLOSC_TRUNC_PREC = 4,  // truncate precision filter
-  BLOSC_LAST_FILTER= 5,  // sentinel
+  BLOSC_NOSHUFFLE = 0,   //!< no shuffle (for compatibility with Blosc1)
+  BLOSC_NOFILTER = 0,    //!< no filter
+  BLOSC_SHUFFLE = 1,     //!< byte-wise shuffle
+  BLOSC_BITSHUFFLE = 2,  //!< bit-wise shuffle
+  BLOSC_DELTA = 3,       //!< delta filter
+  BLOSC_TRUNC_PREC = 4,  //!< truncate precision filter
+  BLOSC_LAST_FILTER= 5,  //!< sentinel
 };
 
 enum {
   BLOSC_MAX_FILTERS = 5,
-  // Maximum number of filters in the filter pipeline
+  //!< Maximum number of filters in the filter pipeline
 };
 
 /**
  * @brief Codes for internal flags (see blosc_cbuffer_metainfo)
  */
 enum {
-  BLOSC_DOSHUFFLE = 0x1,     // byte-wise shuffle
-  BLOSC_MEMCPYED = 0x2,      // plain copy
-  BLOSC_DOBITSHUFFLE = 0x4,  // bit-wise shuffle
-  BLOSC_DODELTA = 0x8,       // delta coding
+  BLOSC_DOSHUFFLE = 0x1,     //!< byte-wise shuffle
+  BLOSC_MEMCPYED = 0x2,      //!< plain copy
+  BLOSC_DOBITSHUFFLE = 0x4,  //!< bit-wise shuffle
+  BLOSC_DODELTA = 0x8,       //!< delta coding
 };
 
 /**
  * @brief Codes for new internal flags in Blosc2
  */
 enum {
-  BLOSC2_USEDICT = 0x1,            // use dictionaries with codec
+  BLOSC2_USEDICT = 0x1,            //!< use dictionaries with codec
 };
 
 /**
  * @brief Values for different Blosc2 capabilities
  */
 enum {
-  BLOSC2_MAXDICTSIZE = 128 * 1024, // maximum size for compression dicts
+  BLOSC2_MAXDICTSIZE = 128 * 1024, //!< maximum size for compression dicts
 };
 
 /**
@@ -123,16 +123,16 @@ enum {
   BLOSC_LIZARD = 6,
 };
 
-/**
- * @brief Names for the different compressors shipped with Blosc
- */
-#define BLOSC_BLOSCLZ_COMPNAME   "blosclz"
-#define BLOSC_LZ4_COMPNAME       "lz4"
-#define BLOSC_LZ4HC_COMPNAME     "lz4hc"
-#define BLOSC_LIZARD_COMPNAME    "lizard"
-#define BLOSC_SNAPPY_COMPNAME    "snappy"
-#define BLOSC_ZLIB_COMPNAME      "zlib"
-#define BLOSC_ZSTD_COMPNAME      "zstd"
+
+// Names for the different compressors shipped with Blosc
+
+#define BLOSC_BLOSCLZ_COMPNAME   "blosclz" //!< "blosclz"
+#define BLOSC_LZ4_COMPNAME       "lz4" //!< "lz4"
+#define BLOSC_LZ4HC_COMPNAME     "lz4hc" //!< "lz4hc"   
+#define BLOSC_LIZARD_COMPNAME    "lizard" //!< "lizard"
+#define BLOSC_SNAPPY_COMPNAME    "snappy" //!< "snappy"
+#define BLOSC_ZLIB_COMPNAME      "zlib" //!< "zlib"
+#define BLOSC_ZSTD_COMPNAME      "zstd" //!< "zstd"
 
 /**
  * @brief Codes for compression libraries shipped with Blosc (code must be < 8)
@@ -144,7 +144,7 @@ enum {
   BLOSC_ZLIB_LIB = 3,
   BLOSC_ZSTD_LIB = 4,
   BLOSC_LIZARD_LIB = 5,
-  BLOSC_SCHUNK_LIB = 7,   // compressor library in super-chunk header
+  BLOSC_SCHUNK_LIB = 7,   //!< compressor library in super-chunk header
 };
 
 /**
@@ -167,7 +167,7 @@ enum {
 enum {
   BLOSC_BLOSCLZ_FORMAT = BLOSC_BLOSCLZ_LIB,
   BLOSC_LZ4_FORMAT = BLOSC_LZ4_LIB,
-  // LZ4HC and LZ4 share the same format
+  //!< LZ4HC and LZ4 share the same format
   BLOSC_LZ4HC_FORMAT = BLOSC_LZ4_LIB,
   BLOSC_LIZARD_FORMAT = BLOSC_LIZARD_LIB,
   BLOSC_SNAPPY_FORMAT = BLOSC_SNAPPY_LIB,
@@ -559,23 +559,23 @@ typedef struct blosc2_context_s blosc2_context;   /* opaque type */
  */
 typedef struct {
   uint8_t compcode;
-  // The compressor codec.
+  //!< The compressor codec.
   uint8_t clevel;
-  // The compression level (5).
+  //!< The compression level (5).
   int use_dict;
-  // Use dicts or not when compressing (only for ZSTD).
+  //!< Use dicts or not when compressing (only for ZSTD).
   int32_t typesize;
-  // The type size (8).
+  //!< The type size (8).
   int16_t nthreads;
-  // The number of threads to use internally (1).
+  //!< The number of threads to use internally (1).
   int32_t blocksize;
-  // The requested size of the compressed blocks (0; meaning automatic).
+  //!< The requested size of the compressed blocks (0; meaning automatic).
   void* schunk;
-  // The associated schunk, if any (NULL).
+  //!< The associated schunk, if any (NULL).
   uint8_t filters[BLOSC_MAX_FILTERS];
-  // The (sequence of) filters.
+  //!< The (sequence of) filters.
   uint8_t filters_meta[BLOSC_MAX_FILTERS];
-  // The metadata for filters.
+  //!< The metadata for filters.
 } blosc2_cparams;
 
 /**
@@ -593,9 +593,9 @@ static const blosc2_cparams BLOSC_CPARAMS_DEFAULTS = {
  */
 typedef struct {
   int16_t nthreads;
-  // The number of threads to use internally (1).
+  //!< The number of threads to use internally (1).
   void* schunk;
-  // The associated schunk, if any (NULL).
+  //!< The associated schunk, if any (NULL).
 } blosc2_dparams;
 
 /**
@@ -706,19 +706,19 @@ struct blosc2_schunk_s;
  * the contents compressed in the frame.
  */
 typedef struct blosc2_frame_nspaces_s {
-    char* name;  // The namespace identifier for Blosc client (e.g. caterva).
-    uint8_t* content;  // The serialized (msgpack preferably) content of the namespace.
-    int32_t content_len; // The lenght in bytes of the content.
+    char* name;  //!< The namespace identifier for Blosc client (e.g. caterva).
+    uint8_t* content;  //!< The serialized (msgpack preferably) content of the namespace.
+    int32_t content_len; //!< The lenght in bytes of the content.
 } blosc2_frame_nspace;
 
 typedef struct {
-  char* fname;     // The name of the file; if NULL, this is in-memory
-  uint8_t* sdata;  // The in-memory serialized data
-  int64_t len;     // The current length of the frame in (compressed) bytes
-  int64_t maxlen;  // The maximum length of the frame; if 0, there is no maximum
-  struct blosc2_schunk_s *schunk;    // The pointer to super-chunk (if it exists).
-  struct blosc2_frame_nspaces_s *nspaces[BLOSC2_MAX_NAMESPACES]; // The array of namespaces.
-  int16_t nnspaces;  // The number of namespaces in the frame
+  char* fname;     //!< The name of the file; if NULL, this is in-memory
+  uint8_t* sdata;  //!< The in-memory serialized data
+  int64_t len;     //!< The current length of the frame in (compressed) bytes
+  int64_t maxlen;  //!< The maximum length of the frame; if 0, there is no maximum
+  struct blosc2_schunk_s *schunk;    //!< The pointer to super-chunk (if it exists).
+  struct blosc2_frame_nspaces_s *nspaces[BLOSC2_MAX_NAMESPACES]; //!< The array of namespaces.
+  int16_t nnspaces;  //!< The number of namespaces in the frame
 } blosc2_frame;
 
 /**
@@ -747,41 +747,41 @@ typedef struct blosc2_schunk_s {
   uint8_t flags2;
   uint8_t flags3;
   uint8_t compcode;
-  // The default compressor. Each chunk can override this.
+  //!< The default compressor. Each chunk can override this.
   uint8_t clevel;
-  // The compression level and other compress params.
+  //!< The compression level and other compress params.
   int32_t typesize;
-  // The type size.
+  //!< The type size.
   int32_t blocksize;
-  // The requested size of the compressed blocks (0; meaning automatic).
+  //!< The requested size of the compressed blocks (0; meaning automatic).
   int32_t chunksize;
-  // Size of each chunk. 0 if not a fixed chunksize.
+  //!< Size of each chunk. 0 if not a fixed chunksize.
   uint8_t filters[BLOSC_MAX_FILTERS];
-  // The (sequence of) filters.  8-bit per filter.
+  //!< The (sequence of) filters.  8-bit per filter.
   uint8_t filters_meta[BLOSC_MAX_FILTERS];
-  // Metadata for filters. 8-bit per meta-slot.
+  //!< Metadata for filters. 8-bit per meta-slot.
   int32_t nchunks;
-  // Number of chunks in super-chunk.
+  //!< Number of chunks in super-chunk.
   int64_t nbytes;
-  // The data size + metadata size + header size (uncompressed).
+  //!< The data size + metadata size + header size (uncompressed).
   int64_t cbytes;
-  // The data size + metadata size + header size (compressed).
+  //!< The data size + metadata size + header size (compressed).
   uint8_t* metadata_chunk;
-  // Pointer to schunk metadata.
+  //!< Pointer to schunk metadata.
   uint8_t* userdata_chunk;
-  // Pointer to user-defined data.
+  //!< Pointer to user-defined data.
   uint8_t** data;
-  // Pointer to chunk data pointers.
+  //!< Pointer to chunk data pointers.
   blosc2_frame* frame;
-  // Pointer to frame used as store for chunks.
-  //uint8_t* ctx;
-  // Context for the thread holder. NULL if not acquired.
+  //!< Pointer to frame used as store for chunks.
+  //!<uint8_t* ctx;
+  //!< Context for the thread holder. NULL if not acquired.
   blosc2_context* cctx;
-  // Context for compression
+  //!< Context for compression
   blosc2_context* dctx;
-  // Context for decompression.
+  //!< Context for decompression.
   uint8_t* reserved;
-  // Reserved for the future.
+  //!< Reserved for the future.
 } blosc2_schunk;
 
 /**
